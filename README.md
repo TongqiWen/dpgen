@@ -571,7 +571,8 @@ The bold notation of key (such aas **type_map**) means that it's a necessary key
 |**fp_params["mixingweight"]** | Float| 0.05 | Proportion a of output Density Matrix to be used for the input Density Matrix of next SCF cycle (linear mixing).
 |**fp_params["NumberPulay"]** | Integer| 5 | Controls the Pulay convergence accelerator.
 | *fp_style == cp2k*
-| **fp_params** | Dict |  |Parameters for cp2k calculation. find detail in manual.cp2k.org. only the kind section must be set before use.  we assume that you have basic knowledge for cp2k input.
+| **user_fp_params** | Dict |  |Parameters for cp2k calculation. find detail in manual.cp2k.org. only the kind section must be set before use.  we assume that you have basic knowledge for cp2k input.
+| **external_input_path** | String |  | Conflict with key:user_fp_params, use the template input provided by user, some rules should be followed, read the following text in detail.
 
 
 #### Rules for cp2k input at dictionary form
@@ -582,6 +583,9 @@ The bold notation of key (such aas **type_map**) means that it's a necessary key
 - replace `section name` in cp2k as `keyword` in dict. . The corresponding value is a `dict`.
 - repalce `section parameter` in cp2k as `value` with dict. keyword `"_"`
 - `repeat section` in cp2k just need to be written once with repeat parameter as list. 
+
+If you want to use your own paramter, just write a corresponding dictionary. The `COORD` section will be filled by dpgen automatically, therefore do not include this in dictionary. The `OT` or `Diagonalization` section is require for semiconductor or metal system. For specific example, have a look on `example` directory.
+
 Here are examples for setting:
  ```python
 
@@ -589,23 +593,71 @@ Here are examples for setting:
  #other we have set other parameters in code, if you want to
  #use your own paramter, just write a corresponding dictionary
  "user_fp_params":   {
- "FORCE_EVAL":{
- "DFT":{
- "BASIS_SET_FILE_NAME": "path",
- "POTENTIAL_FILE_NAME": "path"
+     "FORCE_EVAL":{
+         "DFT":{
+             "BASIS_SET_FILE_NAME": "path",
+             "POTENTIAL_FILE_NAME": "path",
+             "SCF":{
+                 "OT":{ "keyword":"keyword parameter", "keyword2":"keyword parameter" }
+             }
+         }
+         "SUBSYS":{
+             "KIND":{
+                 "_": ["N","C","H"],
+                 "POTENTIAL": ["GTH-PBE-q5","GTH-PBE-q4", "GTH-PBE-q1"],
+                 "BASIS_SET": ["DZVP-MOLOPT-GTH","DZVP-MOLOPT-GTH","DZVP-MOLOPT-GTH"]
+             }
+         }
+     }
  }
- "SUBSYS":{
- "KIND":{
- "_": ["N","C","H"],
- "POTENTIAL": ["GTH-PBE-q5","GTH-PBE-q4", "GTH-PBE-q1"],
- "BASIS_SET": ["DZVP-MOLOPT-GTH","DZVP-MOLOPT-GTH","DZVP-MOLOPT-GTH"]
- }
- }
- }
- }
+ ```
+
+#### Rules for use cp2k template input provided by user
+
+See Full example template.inp and dpgen input parameter file in 
+
+`tests/generator/cp2k_make_fp_files/exinput/template.inp` and `tests/generator/param-mgo-cp2k-exinput.json` 
+
+Here is example for provide external input
+
+```python
+    {
+    "_comment":     " 02.fp ",
+     "fp_style":     "cp2k",
+     "shuffle_poscar":   false,
+     "fp_task_max":  100,
+     "fp_task_min":  10,
+     "fp_pp_path":   ".",
+     "fp_pp_files":  [],
+     "external_input_path": "./cp2k_make_fp_files/exinput/template.inp",
+     "_comment":     " that's all 
+     }
 ```
 
+the following essential section should be provided in user template
 
+```
+
+ &FORCE_EVAL
+   # add this line if you need to fit virial
+   STRESS_TENSOR ANALYTICAL
+   &PRINT
+     &FORCES ON
+     &END FORCES
+     # add this line if you need to fit virial
+     &STRESS_TENSOR ON
+     &END FORCES
+   &END PRINT
+   &SUBSYS
+     &CELL
+       ABC LEFT FOR DPGEN
+     &END CELL
+     &COORD
+     @include coord.xyz
+     &END COORD
+   &END SUBSYS
+&END FORCE_EVAL
+```
 
 ## Test: Auto-test for Deep Generator
 ###  configure and param.json
