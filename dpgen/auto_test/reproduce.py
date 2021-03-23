@@ -109,7 +109,7 @@ def post_repro(init_data_path, init_from_suffix, all_tasks, ptr_data, reprod_las
         else:
             nframe = len(init_task_result['energies'])
         # idid += nframe
-        natoms = init_task_result['atom_numbs'][0]
+        natoms = sum(init_task_result['atom_numbs'])
         if reprod_last_frame:
             init_ener = init_task_result['energies'][-1:]
         else:
@@ -123,7 +123,7 @@ def post_repro(init_data_path, init_from_suffix, all_tasks, ptr_data, reprod_las
             output_ener_tot.extend(output_task_result['energies'])
 
             init_epa = init_ener[jj - idid] / natoms
-            ptr_data += '%s %7.3f  %7.3f  %7.3f\n' % (ii, init_epa, output_epa, output_epa - init_epa)
+            ptr_data += '%s %7.4f  %7.4f  %7.4f\n' % (ii, init_epa, output_epa, output_epa - init_epa)
         idid += nframe
         output_ener = np.array(output_ener)
         output_ener = np.reshape(output_ener, [-1, 1])

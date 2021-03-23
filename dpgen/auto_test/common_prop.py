@@ -9,6 +9,7 @@ from dpgen.auto_test.Elastic import Elastic
 from dpgen.auto_test.Interstitial import Interstitial
 from dpgen.auto_test.Surface import Surface
 from dpgen.auto_test.Vacancy import Vacancy
+from dpgen.auto_test.Lat_param_T import Lat_param_T
 from dpgen.auto_test.calculator import make_calculator
 from dpgen.dispatcher.Dispatcher import make_dispatcher
 from dpgen.remote.decide_machine import decide_fp_machine, decide_model_devi_machine
@@ -31,6 +32,8 @@ def make_property_instance(paramters):
         return Interstitial(paramters)
     elif prop_type == 'surface':
         return Surface(paramters)
+    elif prop_type == 'lat_param_T':
+        return Lat_param_T(paramters)
     else:
         raise RuntimeError(f'unknown property type {prop_type}')
 
