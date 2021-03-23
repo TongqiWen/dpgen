@@ -194,7 +194,7 @@ class Lammps(Task):
 
         dumpfn(task_param, os.path.join(output_dir, 'task.json'), indent=4)
 
-        in_lammps_not_link_list = ['eos']
+        in_lammps_not_link_list = ['eos', 'lat_param_T']
         if task_type not in in_lammps_not_link_list:
             with open(os.path.join(output_dir, '../in.lammps'), 'w') as fp:
                 fp.write(fc)
@@ -206,6 +206,8 @@ class Lammps(Task):
                 os.remove('in.lammps')
                 os.symlink('../in.lammps', 'in.lammps')
             os.chdir(cwd)
+        elif task_type == 'lat_param_T':
+            print('skip writing in.lammps file in Lammps.py for lat_param_T')
         else:
             with open(os.path.join(output_dir, 'in.lammps'), 'w') as fp:
                 fp.write(fc)
@@ -216,10 +218,10 @@ class Lammps(Task):
         dump_lammps = os.path.join(output_dir, 'dump.relax')
         if not os.path.isfile(log_lammps):
             warnings.warn("cannot find log.lammps in " + output_dir + " skip")
-            return None
+            return {"result": "None"}
         if not os.path.isfile(dump_lammps):
             warnings.warn("cannot find dump.relax in " + output_dir + " skip")
-            return None
+            return {"result": "None"}
         else:
             box = []
             coord = []
@@ -311,8 +313,10 @@ class Lammps(Task):
             dlog.debug(_tmp)
             type_map_list = lammps.element_list(self.type_map)
 
+            #type_list_set = set(type_list)
             type_map_idx = list(range(len(type_map_list)))
             atom_numbs = []
+            #for ii in type_list_set:
             for ii in type_map_idx:
                 count = 0
                 for jj in type_list:
@@ -372,22 +376,43 @@ class Lammps(Task):
             return result_dict
 
     def forward_files(self, property_type='relaxation'):
-        if self.inter_type == 'meam':
-            return ['conf.lmp', 'in.lammps'] + list(map(os.path.basename, self.model))
+        if property_type in ['lat_param_T']:
+            if self.inter_type == 'meam':
+                return ['in.lammps', 'unitcell.mod', 'potential.mod', 'lat_param_init.mod', 'init.mod',
+                        'sys.mod', 'lat_param.mod'] + list(map(os.path.basename, self.model))
+            else:
+                return ['in.lammps', 'unitcell.mod', 'potential.mod', 'lat_param_init.mod', 'init.mod',
+                        'sys.mod', 'lat_param.mod', os.path.basename(self.model)]
         else:
-            return ['conf.lmp', 'in.lammps', os.path.basename(self.model)]
+            if self.inter_type == 'meam':
+                return ['conf.lmp', 'in.lammps'] + list(map(os.path.basename, self.model))
+            else:
+                return ['conf.lmp', 'in.lammps', os.path.basename(self.model)]
 
     def forward_common_files(self, property_type='relaxation'):
-        if property_type not in ['eos']:
-            if self.inter_type == 'meam':
-                return ['in.lammps'] + list(map(os.path.basename, self.model))
-            else:
-                return ['in.lammps', os.path.basename(self.model)]
-        else:
+        if property_type in ['eos']:
             if self.inter_type == 'meam':
                 return list(map(os.path.basename, self.model))
             else:
                 return [os.path.basename(self.model)]
 
+        elif property_type in ['lat_param_T']:
+            if self.inter_type == 'meam':
+                return ['unitcell.mod', 'potential.mod', 'lat_param_init.mod',
+                        'sys.mod', 'lat_param.mod'] + list(map(os.path.basename, self.model))
+            else:
+                return ['unitcell.mod', 'potential.mod', 'lat_param_init.mod',
+                        'sys.mod', 'lat_param.mod', os.path.basename(self.model)]
+
+        else:
+            if self.inter_type == 'meam':
+                return ['in.lammps'] + list(map(os.path.basename, self.model))
+            else:
+                return ['in.lammps', os.path.basename(self.model)]
+
     def backward_files(self, property_type='relaxation'):
-        return ['log.lammps', 'outlog', 'dump.relax']
+        if property_type in ['lat_param_T']:
+            return ['log.lammps', 'outlog', 'lat_param_finite_temp.mod']
+
+        else:
+            return ['log.lammps', 'outlog', 'dump.relax']
