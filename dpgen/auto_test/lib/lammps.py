@@ -212,7 +212,7 @@ def make_lammps_eval(conf, type_map, interaction, param):
 
 
 def make_lammps_equi(conf, type_map, interaction, param,
-                     etol=1e-12, ftol=1e-6,
+                     etol=0, ftol=1e-12,
                      maxiter=5000, maxeval=500000,
                      change_box=True):
     type_map_list = element_list(type_map)
@@ -266,7 +266,7 @@ def make_lammps_equi(conf, type_map, interaction, param,
 
 
 def make_lammps_elastic(conf, type_map, interaction, param,
-                        etol=1e-12, ftol=1e-6,
+                        etol=0, ftol=1e-12,
                         maxiter=5000, maxeval=500000):
     type_map_list = element_list(type_map)
 
@@ -312,7 +312,7 @@ def make_lammps_elastic(conf, type_map, interaction, param,
 
 def make_lammps_press_relax(conf, type_map, scale2equi, interaction, param,
                             B0=70, bp=0,
-                            etol=1e-12, ftol=1e-6,
+                            etol=0, ftol=1e-12,
                             maxiter=5000, maxeval=500000):
     type_map_list = element_list(type_map)
 
